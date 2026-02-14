@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="main.css">
+    <link rel="icon" href="img/flowers.png" type="image/x-icon">
+    <title>Flowers for You</title>
+    <style>
+        /* Overlay Interaksi */
+        #interaction-overlay {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background-color: #000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            transition: opacity 1s ease;
+        }
+
+        #emoji-target {
+            font-size: 60px;
+            cursor: pointer;
+            position: absolute;
+            user-select: none;
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.3s ease;
+            filter: drop-shadow(0 0 15px rgba(255, 255, 255, 0.5));
+        }
+
+        #instruction {
+            color: white;
+            position: absolute;
+            top: 20%;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            letter-spacing: 2px;
+            text-align: center;
+            width: 100%;
+            text-shadow: 0 0 10px rgba(255,255,255,0.5);
+        }
+
+        #flower-wrapper {
+            display: none;
+        }
+
+        .hidden { display: none !important; }
+        .fade-out { opacity: 0; }
+    </style>
+</head>
+<body class="container">
+
+    <div id="interaction-overlay">
+        <div id="instruction">Klik emojinya sampai bunganya mekar! ✨</div>
+        <div id="emoji-target">🌸</div>
+    </div>
+
+    <audio id="mySong" loop>
+        <source src="Love Story - TOMORROW X TOGETHER.mp3" type="audio/mp3">
+    </audio>
+
+    <div class="night"></div>
+    
+    <div id="flower-wrapper">
+        <div class="flowers">
+            </div>
+    </div>
+
+    <script>
+        const emoji = document.getElementById('emoji-target');
+        const overlay = document.getElementById('interaction-overlay');
+        const wrapper = document.getElementById('flower-wrapper');
+        const audio = document.getElementById('mySong');
+        
+        // Daftar emoji random
+        const emojiList = ['❤️', '✨', '🌸', '🍭', '⭐', '🎈', '🧸', '🌈', '🍓', '🎀', '🐒','👽','🙊','🙈','🙉','🐷','🦍','🐽','🤢','💩'];
+        
+        let clickCount = 0;
+        const maxClicks = 6; // Jumlah klik yang kamu minta (sedang, tidak kelamaan)
+
+        // HTML Bunga lengkap (Sesuai struktur main.css kamu)
+        const flowerHTML = `
+        <div class="flower flower--1">
+            <div class="flower__leafs flower__leafs--1">
+                <div class="flower__leaf flower__leaf--1"></div>
+                <div class="flower__leaf flower__leaf--2"></div>
+                <div class="flower__leaf flower__leaf--3"></div>
+                <div class="flower__leaf flower__leaf--4"></div>
+                <div class="flower__white-circle"></div>
+                ${Array(8).fill(0).map((_, i) => `<div class="flower__light flower__light--${i+1}"></div>`).join('')}
+            </div>
+            <div class="flower__line">
+                <div class="flower__line__leaf flower__line__leaf--1"></div>
+                <div class="flower__line__leaf flower__line__leaf--2"></div>
+                <div class="flower__line__leaf flower__line__leaf--3"></div>
+                <div class="flower__line__leaf flower__line__leaf--4"></div>
+                <div class="flower__line__leaf flower__line__leaf--5"></div>
+                <div class="flower__line__leaf flower__line__leaf--6"></div>
+            </div>
+        </div>
+
+        <div class="flower flower--2">
+            <div class="flower__leafs flower__leafs--2">
+                <div class="flower__leaf flower__leaf--1"></div>
+                <div class="flower__leaf flower__leaf--2"></div>
+                <div class="flower__leaf flower__leaf--3"></div>
+                <div class="flower__leaf flower__leaf--4"></div>
+                <div class="flower__white-circle"></div>
+                ${Array(8).fill(0).map((_, i) => `<div class="flower__light flower__light--${i+1}"></div>`).join('')}
+            </div>
+            <div class="flower__line">
+                <div class="flower__line__leaf flower__line__leaf--1"></div>
+                <div class="flower__line__leaf flower__line__leaf--2"></div>
+                <div class="flower__line__leaf flower__line__leaf--3"></div>
+                <div class="flower__line__leaf flower__line__leaf--4"></div>
+            </div>
+        </div>
+
+        <div class="flower flower--3">
+            <div class="flower__leafs flower__leafs--3">
+                <div class="flower__leaf flower__leaf--1"></div>
+                <div class="flower__leaf flower__leaf--2"></div>
+                <div class="flower__leaf flower__leaf--3"></div>
+                <div class="flower__leaf flower__leaf--4"></div>
+                <div class="flower__white-circle"></div>
+                ${Array(8).fill(0).map((_, i) => `<div class="flower__light flower__light--${i+1}"></div>`).join('')}
+            </div>
+            <div class="flower__line">
+                <div class="flower__line__leaf flower__line__leaf--1"></div>
+                <div class="flower__line__leaf flower__line__leaf--2"></div>
+                <div class="flower__line__leaf flower__line__leaf--3"></div>
+                <div class="flower__line__leaf flower__line__leaf--4"></div>
+            </div>
+        </div>
+
+        <div class="long-g">
+            <div class="grow-ans" style="--d:3s"><div class="leaf leaf--0"></div></div>
+            <div class="grow-ans" style="--d:2.2s"><div class="leaf leaf--1"></div></div>
+        </div>
+        <div class="long-g long-g--1">
+            <div class="grow-ans" style="--d:3.4s"><div class="leaf leaf--0"></div></div>
+            <div class="grow-ans" style="--d:3.8s"><div class="leaf leaf--1"></div></div>
+        </div>
+        <div class="long-g long-g--2">
+            <div class="grow-ans" style="--d:4s"><div class="leaf leaf--0"></div></div>
+        </div>
+        <div class="long-g long-g--3">
+            <div class="grow-ans" style="--d:4.2s"><div class="leaf leaf--0"></div></div>
+        </div>
+
+        <div class="flower__grass flower__grass--1">
+            <div class="flower__grass--top"></div>
+            <div class="flower__grass--bottom"></div>
+            ${Array(8).fill(0).map((_, i) => `<div class="flower__grass__leaf flower__grass__leaf--${i+1}"></div>`).join('')}
+            <div class="flower__grass__overlay"></div>
+        </div>
+
+        <div class="flower__grass flower__grass--2">
+            <div class="flower__grass--top"></div>
+            <div class="flower__grass--bottom"></div>
+            ${Array(8).fill(0).map((_, i) => `<div class="flower__grass__leaf flower__grass__leaf--${i+1}"></div>`).join('')}
+            <div class="flower__grass__overlay"></div>
+        </div>
+
+        <div class="flower__g-long">
+            <div class="flower__g-long__top"></div>
+            <div class="flower__g-long__bottom"></div>
+        </div>
+
+        <div class="flower__g-right flower__g-right--1">
+            <div class="leaf"></div>
+        </div>
+
+        <div class="flower__g-right flower__g-right--2">
+            <div class="leaf"></div>
+        </div>
+
+        <div class="flower__g-front">
+            <div class="flower__g-front__line"></div>
+            ${Array(8).fill(0).map((_, i) => `
+                <div class="flower__g-front__leaf-wrapper flower__g-front__leaf-wrapper--${i+1}">
+                    <div class="flower__g-front__leaf"></div>
+                </div>
+            `).join('')}
+        </div>
+        `;
+        function moveAndChangeEmoji() {
+            // Pindah Posisi
+            const x = Math.random() * (window.innerWidth - 120) + 60;
+            const y = Math.random() * (window.innerHeight - 120) + 60;
+            emoji.style.left = x + 'px';
+            emoji.style.top = y + 'px';
+            
+            // Ganti Emoji Random
+            const randomEmoji = emojiList[Math.floor(Math.random() * emojiList.length)];
+            emoji.innerText = randomEmoji;
+        }
+
+        // Jalankan pertama kali
+        moveAndChangeEmoji();
+
+        emoji.addEventListener('click', function() {
+            clickCount++;
+            
+            // Efek klik
+            emoji.style.transform = `scale(0.5)`;
+            emoji.style.opacity = '0';
+            
+            setTimeout(() => {
+                if (clickCount < maxClicks) {
+                    moveAndChangeEmoji();
+                    emoji.style.opacity = '1';
+                    // Emoji makin lama makin besar sebagai tanda mau mekar
+                    emoji.style.transform = `scale(${1 + clickCount * 0.2})`; 
+                } else {
+                    startSurprise();
+                }
+            }, 250);
+        });
+
+        function startSurprise() {
+            // Putar audio
+            audio.play().catch(e => console.log("Gagal putar musik:", e));
+            
+            // Hilangkan overlay
+            overlay.classList.add('fade-out');
+            
+            setTimeout(() => {
+                overlay.classList.add('hidden');
+                
+                // Suntikkan HTML Bunga
+                document.querySelector('.flowers').innerHTML = flowerHTML;
+                wrapper.style.display = 'block';
+                
+                // Trigger class container di body (untuk background night dll)
+                document.body.classList.remove("container");
+            }, 1000);
+        }
+    </script>
+</body>
+</html>
