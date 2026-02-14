@@ -8,6 +8,19 @@
     <link rel="icon" href="img/flowers.png" type="image/x-icon">
     <title>Flowers for You</title>
     <style>
+              /* Khusus tampilan HP */
+@media screen and (max-width: 600px) {
+    .flowers {
+        position: absolute;
+        left: 50%;
+        top: 70%; /* Mengangkat bunga lebih ke atas agar di tengah layar */
+    }
+    
+    .night {
+        height: 100vh;
+        width: 100vw;
+    }
+}
         /* Overlay Interaksi */
         #interaction-overlay {
             position: fixed;
@@ -239,4 +252,5 @@
         }
     </script>
 </body>
+
 </html>
